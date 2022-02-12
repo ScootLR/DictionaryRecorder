@@ -2,6 +2,7 @@ import sounddevice as sd
 import pydub
 from pathlib import Path
 import numpy as np
+import time
 
 
 SAMPLING_FREQUENCY = 44100
@@ -26,10 +27,15 @@ def record_audio(out_file: Path,
         The number of seconds to record for
     """
     assert out_file.suffix == ".mp3", f"The output file's suffix is not .mp3, it is: {out_file.suffix}"
-    assert not out_file.exists(), "The output file already exists!"
+    if out_file.exists():
+        out_file.unlink()
 
     samples = record_duration * sampling_frequency
+
+    start = time.time()
     recording = sd.rec(samples, samplerate=sampling_frequency, channels=2)
+    time.sleep(1)
+    sd.stop()
     print("Recording...")
     sd.wait()
     print("Finished recording")

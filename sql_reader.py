@@ -6,15 +6,15 @@ SQL_FILE = Path("./dictionaryStudyTool.sql")
 JSON_FILE = Path("./words.json")
 
 
-def read_sql_file() -> str:
-    """
-    Returns the dictionary in one long string.
-    """
-    all_text = SQL_FILE.read_text()
-    reduced_text = all_text.split(' VALUES ', maxsplit=1)[1]
-    reduced_text = reduced_text[::-1].split("00004!*/", maxsplit=1)[1][::-1][:-1]
-
-    return reduced_text
+# def read_sql_file() -> str:
+#     """
+#     Returns the dictionary in one long string.
+#     """
+#     all_text = SQL_FILE.read_text()
+#     reduced_text = all_text.split(' VALUES ', maxsplit=1)[1]
+#     reduced_text = reduced_text[::-1].split("00004!*/", maxsplit=1)[1][::-1][:-1]
+#
+#     return reduced_text
 
 
 # def separate_words(string_repr: str) -> List[str]:
