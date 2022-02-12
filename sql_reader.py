@@ -1,8 +1,7 @@
 from pathlib import Path
-from typing import List, Tuple, Dict, Any
+from typing import List
 import json
 
-SQL_FILE = Path("./dictionaryStudyTool.sql")
 JSON_FILE = Path("./words.json")
 
 
