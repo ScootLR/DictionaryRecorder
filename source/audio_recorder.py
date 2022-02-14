@@ -1,4 +1,3 @@
-from pynput import keyboard
 import numpy as np
 from pathlib import Path
 import sounddevice as sd
@@ -15,9 +14,6 @@ class Recorder:
 
     Parameters
     ----------
-    filename : Path
-        The location to save the audio to
-        Should be a .mp3 file
     sampling_frequency : int, optional
         The sampling frequency to use
         Defaults to 44100 Hz
@@ -30,11 +26,9 @@ class Recorder:
         Defaults to 60 seconds
     """
     def __init__(self,
-                 filename: Path,
                  sampling_frequency: int = 44100,
                  channels: int = 2,
                  initial_buffer_size_seconds: int = 60):
-        self._filename: Path = filename
         self._sampling_frequency: int = sampling_frequency
         self._channels: int = channels
         self._initial_buffer_size_seconds: int = initial_buffer_size_seconds
@@ -44,19 +38,18 @@ class Recorder:
         self._recording_start_time: Optional[float] = None
         self._recording_end_time: Optional[float] = None
 
-        assert self._filename.suffix == ".mp3", f"The output file's suffix is not .mp3, it is: {self._filename.suffix}"
-        if self._filename.exists():
-            self._filename.unlink()
-
     def start(self) -> None:
         """Start recording audio."""
         if not self._recording:
             self._recording_start_time = time.time()
-            sd.rec(out=self._buffer, samplerate=self._sampling_frequency, channels=self._channels)
-            print('Recording')
-            self._recording = True
+            try:
+                sd.rec(out=self._buffer, samplerate=self._sampling_frequency, channels=self._channels)
+                print('Recording')
+                self._recording = True
+            except sd.PortAudioError:
+                raise Exception("No recording device could be found!")
 
-    def stop(self) -> None:
+    def stop(self, filename: Path) -> None:
         """Stop recording audio and save to disk."""
         if self._recording:
             self._recording_end_time = time.time()
@@ -65,16 +58,22 @@ class Recorder:
             self._recording = False
             print('Finished recording')
 
-            self._save_audio_to_file()
+            assert filename.suffix == ".mp3", f"The output file's suffix is not .mp3, it is: {filename.suffix}"
+            if filename.exists():
+                filename.unlink()
 
-    def _save_audio_to_file(self) -> None:
+            self._save_audio_to_file(filename)
+
+            self._buffer[:] = 0
+
+    def _save_audio_to_file(self, filename: Path) -> None:
         assert isinstance(self._recording_start_time, float), "The recording start time was not saved"
         assert isinstance(self._recording_end_time, float), "The recording end time was not saved"
         assert self._recording_end_time > self._recording_start_time, "The end of the recording was before the start!"
         assert self._recording_end_time < self._recording_start_time + self._initial_buffer_size_seconds, \
             "The audio recording was too long for the buffer"
 
-        print(f"Saving to file {self._filename.as_posix()}")
+        print(f"Saving to file {filename.as_posix()}")
 
         length_of_recording = self._recording_end_time - self._recording_start_time  # seconds
         samples_to_keep = int(np.ceil(length_of_recording * self._sampling_frequency))
@@ -85,36 +84,4 @@ class Recorder:
                                   sample_width=2,
                                   channels=self._channels)
 
-        song.export(self._filename, format="mp3", bitrate="320k")
-
-
-class Listener(keyboard.Listener):
-    """
-    A class for recording audio whilst a key is held down.
-
-    The key that needs to be held down is set to ctrl.
-    """
-    def __init__(self, recorder: Recorder):
-        super().__init__(on_press=self.on_press, on_release=self.on_release)
-        self.recorder: Recorder = recorder
-
-    def on_press(self, key):
-        if key is None:  # unknown event
-            pass
-        elif isinstance(key, keyboard.Key):  # special key event
-            if key.ctrl:
-                self.recorder.start()
-
-    def on_release(self, key):
-        if isinstance(key, keyboard.Key):  # special key event
-            if key.ctrl:
-                self.recorder.stop()
-                return False
-
-
-if __name__ == "__main__":
-    f = Path("./test.mp3")
-    recorder = Recorder(f)
-    listener = Listener(recorder)
-    listener.start()
-    listener.join()
+        song.export(filename, format="mp3", bitrate="320k")
