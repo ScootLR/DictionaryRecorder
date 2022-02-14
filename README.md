@@ -15,6 +15,7 @@ ffmpeg is needed for the conversion to mp3. You may need to add this to your pat
 
 
 # Running the program
+
 To run the program, from the top-level directory use the command:
 
 `
@@ -22,3 +23,8 @@ py main.py
 `
 
 Then follow the onscreen instructions.
+
+# Generated audio files
+
+All audio files generated can be found within the "audio" folder that is automatically generated.
+Furthermore, the audio files for words are separated by letter.
