@@ -20,7 +20,7 @@ class Recorder:
         Should be a .mp3 file
     sampling_frequency : int, optional
         The sampling frequency to use
-        Defaults to 44100
+        Defaults to 44100 Hz
     channels : int, optional
         The number of channels to sample over
         Defaults to 2
